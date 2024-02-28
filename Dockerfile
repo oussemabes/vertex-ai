@@ -1,16 +1,10 @@
-FROM node:alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY ./ ./
+FROM gcr.io/deeplearning-platform-release/tf2-gpu.2-8
+WORKDIR /root
 
-# Create public directory inside dist
-RUN mkdir -p dist/public
+WORKDIR /
 
-# Create images directory inside public
-RUN mkdir -p dist/public/images
+# Copies the trainer code to the docker image.
+COPY trainer /trainer
 
-EXPOSE 3001
-RUN npm run build
-CMD ["node", "dist/index.js"]
-
+# Sets up the entry point to invoke the trainer.
+ENTRYPOINT ["python", "-m", "trainer.task"]

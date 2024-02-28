@@ -8,6 +8,7 @@ BUCKET_ROOT='/gcs/first-project-413614-bucket'
 # Define variables
 NUM_CLASSES = 5
 EPOCHS=8
+
 BATCH_SIZE = 32
 
 IMG_HEIGHT = 180

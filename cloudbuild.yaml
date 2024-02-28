@@ -9,4 +9,4 @@ steps:
 
   # Step 2: Push the container image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/flower-app/flower_imag']
+    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/flower-app/flower_image']

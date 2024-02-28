@@ -108,4 +108,3 @@ job = aip.PipelineJob(
 
 job.run()
 
-! rm tabular_regression_pipeline.json

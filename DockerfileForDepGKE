@@ -1,0 +1,17 @@
+FROM tensorflow/serving
+
+# Set the environment variable for the model name
+ENV MODEL_NAME my_model
+
+# Set the directory where the model is stored
+ENV MODEL_BASE_PATH /models/my_model/1
+
+# Copy the model from the Google Cloud Storage bucket to the Docker image
+COPY trainedModel/. /models/my_model/1/
+
+# Expose ports for TensorFlow Serving REST and gRPC APIs
+EXPOSE 8501
+EXPOSE 8500
+
+# Command to start TensorFlow Serving
+CMD ["tensorflow_model_server", "--port=8500", "--rest_api_port=8501", "--model_name=my_model", "--model_base_path=/models/my_model"]

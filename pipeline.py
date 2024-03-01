@@ -112,6 +112,8 @@ import os
 from typing import Any, Dict, List
 
 import kfp
+import google.cloud.aiplatform as aip
+
 from kfp.v2 import compiler  
 
 project_number = "first-project-413614"

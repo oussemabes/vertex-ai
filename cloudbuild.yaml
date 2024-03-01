@@ -1,15 +1,15 @@
 steps:
   # Step 1: Build container image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: 
-      - 'build'
-      - '-t'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/flower-app/flower_image'
-      - '.'
+  # - name: 'gcr.io/cloud-builders/docker'
+  #   args: 
+  #     - 'build'
+  #     - '-t'
+  #     - 'us-central1-docker.pkg.dev/$PROJECT_ID/flower-app/flower_image'
+  #     - '.'
 
-  # Step 2: Push the container image to Artifact Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/flower-app/flower_image']
+  # # Step 2: Push the container image to Artifact Registry
+  # - name: 'gcr.io/cloud-builders/docker'
+  #   args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/flower-app/flower_image']
   # Step 3: Create and start the pipeline
   - name: python
     entrypoint: pip

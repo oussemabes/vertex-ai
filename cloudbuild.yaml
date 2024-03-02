@@ -44,7 +44,7 @@ steps:
         export CLOUDSDK_COMPUTE_ZONE=us-central1-c
         export CLOUDSDK_CONTAINER_CLUSTER=cluster-1
         gcloud container clusters get-credentials cluster-1 --zone us-central1-c --project first-project-413614
-        kubectl create deployment ml-model --image=us-central1-docker.pkg.dev/$PROJECT_ID/terrafrom/terrafrom
+        kubectl create deployment ml-model --image=europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform
         kubectl expose deployment ml-model --type=LoadBalancer --port=80 --port=8501 --target-port=8501
 
 

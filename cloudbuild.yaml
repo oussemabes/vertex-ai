@@ -48,7 +48,7 @@ steps:
         # Check if deployment exists
         if kubectl get deployment ml-model &> /dev/null; then
           # Deployment exists, update image
-          kubectl set image deployment/ml-model ml-model=europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform:latest
+          kubectl set image deployment/ml-model terrafrom=europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform:latest
         else
           # Deployment does not exist, create it
           kubectl create deployment ml-model --image=europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform:latest

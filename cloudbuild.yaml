@@ -33,7 +33,7 @@ steps:
   # # Step 7: Push the serving container image to Artifact Registry
   # - name: 'gcr.io/cloud-builders/docker'
   #   args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/terrafrom/terrafrom']
-    - name: 'gcr.io/cloud-builders/gcloud'
+  - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'container'
       - 'clusters'

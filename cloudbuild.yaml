@@ -44,7 +44,16 @@ steps:
         export CLOUDSDK_COMPUTE_ZONE=us-central1-c
         export CLOUDSDK_CONTAINER_CLUSTER=cluster-1
         gcloud container clusters get-credentials cluster-1 --zone us-central1-c --project first-project-413614
-        kubectl create deployment ml-model --image=europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform
+        # Check if deployment exists
+        if kubectl get deployment ml-model &> /dev/null; then
+          # Deployment exists, update image
+          kubectl set image deployment/ml-model ml-model=europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform:new_version
+        else
+          # Deployment does not exist, create it
+          kubectl create deployment ml-model --image=europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform
+        fi
+        
+        # Expose deployment
         kubectl expose deployment ml-model --type=LoadBalancer --port=80 --port=8501 --target-port=8501
 
 

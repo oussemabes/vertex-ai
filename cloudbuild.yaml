@@ -43,7 +43,7 @@ steps:
         export CLOUDSDK_COMPUTE_REGION=us-central1
         export CLOUDSDK_COMPUTE_ZONE=us-central1-c
         export CLOUDSDK_CONTAINER_CLUSTER=cluster-1
-        gcloud container clusters get-credentials ${_CLOUDSDK_CONTAINER_CLUSTER} --zone ${_CLOUDSDK_COMPUTE_ZONE}
+        gcloud container clusters get-credentials cluster-1 --zone us-central1-c --project first-project-413614
   - name: 'gcr.io/cloud-builders/kubectl'
     args:
       - 'create'

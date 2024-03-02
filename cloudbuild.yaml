@@ -11,26 +11,36 @@ steps:
   # - name: 'gcr.io/cloud-builders/docker'
   #   args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/flower-app/flower_image']
   # Step 3: Create and start the pipeline
-  - name: python
-    entrypoint: pip
-    args: ["install", "-r", "requirements.txt", "--user"]
+  # - name: python
+  #   entrypoint: pip
+  #   args: ["install", "-r", "requirements.txt", "--user"]
 
-  # Compile pipeline
-  - name: 'python'
-    entrypoint: 'python'
-    args: ['pipeline.py']
-    id: 'compile'
-  # Copy Trained model
-  - name: 'gcr.io/cloud-builders/gsutil'
-    args: ['cp', '-r', 'gs://first-project-413614-bucket/model/*', './trainedModel']
-  # Step 6: Build the serving container image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: 
-      - 'build'
-      - '-t'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/terrafrom/terrafrom'
-      - './trainer'
-  # Step 7: Push the serving container image to Artifact Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/terrafrom/terrafrom']
+  # # Compile pipeline
+  # - name: 'python'
+  #   entrypoint: 'python'
+  #   args: ['pipeline.py']
+  #   id: 'compile'
+  # # Copy Trained model
+  # - name: 'gcr.io/cloud-builders/gsutil'
+  #   args: ['cp', '-r', 'gs://first-project-413614-bucket/model/*', './trainedModel']
+  # # Step 6: Build the serving container image
+  # - name: 'gcr.io/cloud-builders/docker'
+  #   args: 
+  #     - 'build'
+  #     - '-t'
+  #     - 'us-central1-docker.pkg.dev/$PROJECT_ID/terrafrom/terrafrom'
+  #     - './trainer'
+  # # Step 7: Push the serving container image to Artifact Registry
+  # - name: 'gcr.io/cloud-builders/docker'
+  #   args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/terrafrom/terrafrom']
+    - name: 'gcr.io/cloud-builders/gcloud'
+    args:
+      - 'container'
+      - 'clusters'
+      - 'get-credentials'
+      - 'cluster-1'
+      - '--zone'
+      - 'us-central1-c'
+      - '--project'
+      - 'first-project-413614'
 

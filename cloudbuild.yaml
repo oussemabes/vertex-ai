@@ -33,6 +33,15 @@ steps:
   # # Step 7: Push the serving container image to Artifact Registry
   # - name: 'gcr.io/cloud-builders/docker'
   #   args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/terrafrom/terrafrom']
+  - name: 'gcr.io/cloud-builders/kubectl'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        export CLOUDSDK_COMPUTE_REGION=us-central1
+        export CLOUDSDK_COMPUTE_ZONE=us-central1-c
+        export CLOUDSDK_CONTAINER_CLUSTER=cluster-1
+
   - name: 'gcr.io/cloud-builders/gcloud'
     args:
       - 'container'

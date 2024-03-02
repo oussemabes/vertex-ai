@@ -43,4 +43,18 @@ steps:
       - 'us-central1-c'
       - '--project'
       - 'first-project-413614'
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'create'
+      - 'deployment'
+      - 'model'
+      - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/terrafrom/terrafrom'
+  - name: 'gcr.io/cloud-builders/kubectl'
+    args:
+      - 'expose'
+      - 'deployment'
+      - 'insurance-streamlit'
+      - '--type=LoadBalancer'
+      - '--port=80'
+      - '--target-port=8501'
 

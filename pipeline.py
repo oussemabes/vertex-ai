@@ -181,9 +181,14 @@ import kfp
 from kfp.v2 import compiler
 from google_cloud_pipeline_components.v1.custom_job import CustomTrainingJobOp
 from google_cloud_pipeline_components.v1 import hyperparameter_tuning_job
+project_number = "first-project-413614"
+
+BUCKET_NAME="gs://" + project_number + "-bucket1"
+
+BUCKET_URI="gs://" + project_number + "-bucket"
+
 PIPELINE_ROOT = f"{BUCKET_URI}"
 
-project_number = "first-project-413614"
 
 # Define hyperparameters and data directory
 hp_dict = '{"num_hidden_layers": 3, "hidden_size": 32, "learning_rate": 0.01, "epochs": 1, "steps_per_epoch": -1}'

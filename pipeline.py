@@ -264,10 +264,10 @@ def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str):
     parallel_trial_count=3,  # Example value, adjust as needed
     project=project_number
 )
-    return tuning_task.outputs["best_hyperparameters"]
+    return tuning_job.outputs["best_trial_parameters"]
 
 # Define the training job with hyperparameters as arguments
-def training_job(project: str, display_name: str, data_dir: str, num_hidden_layers: int, hidden_size: int, learning_rate: float, epochs: int, steps_per_epoch: int):
+def training_job(project: str, display_name: str, data_dir: str, best_hyperparameters: dict):
     return CustomTrainingJobOp(
         project=project,
         display_name=display_name,
@@ -276,11 +276,11 @@ def training_job(project: str, display_name: str, data_dir: str, num_hidden_laye
                 "containerSpec": {
                     "env": [
                         {"name": "flower classification", "value": data_dir},
-                        {"name": "num_hidden_layers", "value": str(num_hidden_layers)},
-                        {"name": "hidden_size", "value": str(hidden_size)},
-                        {"name": "learning_rate", "value": str(learning_rate)},
-                        {"name": "epochs", "value": str(epochs)},
-                        {"name": "steps_per_epoch", "value": str(steps_per_epoch)}
+                        {"name": "num_hidden_layers", "value": str(best_hyperparameters["num_hidden_layers"])},
+                        {"name": "hidden_size", "value": str(best_hyperparameters["hidden_size"])},
+                        {"name": "learning_rate", "value": str(best_hyperparameters["learning_rate"])},
+                        {"name": "epochs", "value": str(best_hyperparameters["epochs"])},
+                        {"name": "steps_per_epoch", "value": str(best_hyperparameters["steps_per_epoch"])}
                     ],
                     "imageUri": "us-central1-docker.pkg.dev/first-project-413614/flower-app/flower_image:latest",
                 },
@@ -308,16 +308,11 @@ def pipeline(
 
     # Training job
     training_task = training_job(
-        project=project,
-        display_name="model-training",
-        data_dir=data_dir,
-        num_hidden_layers=tuning_task.outputs["best_hyperparameters"]["num_hidden_layers"],
-        hidden_size=tuning_task.outputs["best_hyperparameters"]["hidden_size"],
-        learning_rate=tuning_task.outputs["best_hyperparameters"]["learning_rate"],
-        epochs=tuning_task.outputs["best_hyperparameters"]["epochs"],
-        steps_per_epoch=tuning_task.outputs["best_hyperparameters"]["steps_per_epoch"]
+    project=project,
+    display_name="model-training",
+    data_dir=data_dir,
+    best_hyperparameters=tuning_task.outputs["best_trial_parameters"]
     )
-
     # The training job should start only after the tuning job completes
     training_task.after(tuning_task)
 

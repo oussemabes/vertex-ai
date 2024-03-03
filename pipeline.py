@@ -254,7 +254,7 @@ parameters = hyperparameter_tuning_job.serialize_parameters({
 # Define the hyperparameter tuning job
 def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str):
     
-    return hyperparameter_tuning_job.HyperparameterTuningJobRunOp(
+    hyperparameter_tuning_job.HyperparameterTuningJobRunOp(
     display_name=display_name,
     base_output_directory=base_output_directory,
     worker_pool_specs=worker_pool_specs,
@@ -264,6 +264,8 @@ def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str):
     parallel_trial_count=3,  # Example value, adjust as needed
     project=project_number
 )
+    return tuning_task.outputs["best_hyperparameters"]
+
 # Define the training job with hyperparameters as arguments
 def training_job(project: str, display_name: str, data_dir: str, num_hidden_layers: int, hidden_size: int, learning_rate: float, epochs: int, steps_per_epoch: int):
     return CustomTrainingJobOp(

@@ -179,8 +179,14 @@
 # job.run()
 import kfp
 from kfp.v2 import compiler
+from google.cloud import aiplatform
 from google_cloud_pipeline_components.v1.custom_job import CustomTrainingJobOp
 from google_cloud_pipeline_components.v1 import hyperparameter_tuning_job
+from google.cloud.aiplatform import hyperparameter_tuning as hpt
+from datetime import datetime
+
+TIMESTAMP = datetime.now().strftime("%Y%m%d%H%M%S")
+
 project_number = "first-project-413614"
 
 BUCKET_NAME="gs://" + project_number + "-bucket1"
@@ -193,21 +199,64 @@ PIPELINE_ROOT = f"{BUCKET_URI}"
 # Define hyperparameters and data directory
 hp_dict = '{"num_hidden_layers": 3, "hidden_size": 32, "learning_rate": 0.01, "epochs": 1, "steps_per_epoch": -1}'
 data_dir = f"gs://{project_number}-bucket/bikes_weather/flower_photos/"
+container_spec = {
+    "image_uri": "us-central1-docker.pkg.dev/first-project-413614/flower-app/flower_image:latest",
+    "args": [
+        f"--project_name={project_number}",
+        f"--bucket_name={BUCKET_NAME}",
+        f"--train_path=tweet_eval_emotions/data/train/train.csv",
+        f"--test_path=tweet_eval_emotions/data/test/test.csv",
+        f"--validation_path=tweet_eval_emotions/data/validation/validation.csv",
+        f"--distribute=multiworker",
+        f"--batch_size=32",
+        f"--hp=True",
+    ],
+}
+
+machine_spec = {
+    "machine_type": "n1-standard-4",
+    # "accelerator_type": "NVIDIA_TESLA_T4",
+    # "accelerator_count": 2,
+}
+
+worker_pool_specs = [
+    {
+        "machine_spec": machine_spec,
+        "replica_count": 1,
+        "container_spec": container_spec,
+    },
+    {
+        "machine_spec": machine_spec,
+        "replica_count": 2,
+        "container_spec": container_spec,
+    },
+]
+
+JOB_NAME = "custom_nlp_training-hyperparameter-job " + TIMESTAMP
+
+custom_job = aiplatform.CustomJob(
+    display_name=JOB_NAME, project=project_number, worker_pool_specs=worker_pool_specs
+)
+
+metric_spec = {"accuracy": "maximize"}
+
+parameter_spec = {
+    "lr": hpt.DoubleParameterSpec(min=0.001, max=1, scale="log"),
+    "epochs": hpt.IntegerParameterSpec(min=1, max=3, scale="linear"),
+}
 
 # Define the hyperparameter tuning job
 def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str):
+    
     return hyperparameter_tuning_job.HyperparameterTuningJobRunOp(
-        project=project,
-        display_name=display_name,
-        container_uri="us-central1-docker.pkg.dev/first-project-413614/flower-app/flower_image:latest",
-        args=["--data-dir", data_dir, "--hptune-dict", hp_dict],
-        metric="accuracy",
-        max_trial_count=10,
-        parallel_trial_count=3,
-        machine_spec={"machine_type": "n1-standard-8"},
-        objective="maximize",
-        network={"use_current_subnet": True},
-    )
+    display_name=JOB_NAME,
+    custom_job=custom_job,
+    metric_spec=metric_spec,
+    parameter_spec=parameter_spec,
+    max_trial_count=2,
+    parallel_trial_count=2,
+    project=project_number,
+)
 
 # Define the training job with hyperparameters as arguments
 def training_job(project: str, display_name: str, data_dir: str, num_hidden_layers: int, hidden_size: int, learning_rate: float, epochs: int, steps_per_epoch: int):

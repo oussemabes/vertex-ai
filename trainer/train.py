@@ -1,6 +1,5 @@
 import tensorflow as tf
 import numpy as np
-import os
 
 ## Replace {your-gcs-bucket} !!
 BUCKET_ROOT='/gcs/first-project-413614-bucket'
@@ -15,7 +14,7 @@ IMG_HEIGHT = 180
 IMG_WIDTH = 180
 
 DATA_DIR = f'{BUCKET_ROOT}/flower_photos'
-
+hyperparamter_Dir=f'{BUCKET_ROOT}/hyperparamater'
 def create_datasets(data_dir, batch_size):
   '''Creates train and validation datasets.'''
 

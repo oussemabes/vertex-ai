@@ -181,6 +181,7 @@ import kfp
 from kfp.v2 import compiler
 from google_cloud_pipeline_components.v1.custom_job import CustomTrainingJobOp
 from google_cloud_pipeline_components.v1 import hyperparameter_tuning_job
+PIPELINE_ROOT = f"{BUCKET_URI}"
 
 project_number = "first-project-413614"
 
@@ -189,7 +190,7 @@ hp_dict = '{"num_hidden_layers": 3, "hidden_size": 32, "learning_rate": 0.01, "e
 data_dir = f"gs://{project_number}-bucket/bikes_weather/flower_photos/"
 
 # Define the hyperparameter tuning job
-def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str) -> hyperparameter_tuning_job:
+def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str):
     return hyperparameter_tuning_job(
         project=project,
         display_name=display_name,
@@ -204,7 +205,7 @@ def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str) -> 
     )
 
 # Define the training job with hyperparameters as arguments
-def training_job(project: str, display_name: str, data_dir: str, num_hidden_layers: int, hidden_size: int, learning_rate: float, epochs: int, steps_per_epoch: int) -> CustomTrainingJobOp:
+def training_job(project: str, display_name: str, data_dir: str, num_hidden_layers: int, hidden_size: int, learning_rate: float, epochs: int, steps_per_epoch: int):
     return CustomTrainingJobOp(
         project=project,
         display_name=display_name,

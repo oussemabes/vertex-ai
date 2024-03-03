@@ -244,20 +244,26 @@ parameter_spec = {
     "lr": hpt.DoubleParameterSpec(min=0.001, max=1, scale="log"),
     "epochs": hpt.IntegerParameterSpec(min=1, max=3, scale="linear"),
 }
+base_output_directory = f"gs://{project_number}-bucket1/hyperparameter_tuning_output/"
+metrics = hyperparameter_tuning_job.serialize_metrics({"accuracy": "maximize"})
+parameters = hyperparameter_tuning_job.serialize_parameters({
+    'lr': hpt.DoubleParameterSpec(min=0.001, max=1, scale='log'),
+    'epochs': hpt.IntegerParameterSpec(min=1, max=3, scale='linear')
+})
 
 # Define the hyperparameter tuning job
 def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str):
     
     return hyperparameter_tuning_job.HyperparameterTuningJobRunOp(
-        display_name=JOB_NAME,
-        custom_job=custom_job,
-        metric_spec=metric_spec,
-        parameter_spec=parameter_spec,
-        max_trial_count=2,
-        parallel_trial_count=2,
-        project=project_number,
-    )
-
+    display_name=display_name,
+    base_output_directory=base_output_directory,
+    worker_pool_specs=worker_pool_specs,
+    study_spec_metrics=metrics,
+    study_spec_parameters=parameters,
+    max_trial_count=10,  # Example value, adjust as needed
+    parallel_trial_count=3,  # Example value, adjust as needed
+    project=project_number
+)
 # Define the training job with hyperparameters as arguments
 def training_job(project: str, display_name: str, data_dir: str, num_hidden_layers: int, hidden_size: int, learning_rate: float, epochs: int, steps_per_epoch: int):
     return CustomTrainingJobOp(

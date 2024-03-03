@@ -179,7 +179,6 @@
 # job.run()
 import kfp
 from kfp.v2 import compiler
-from google_cloud_pipeline_components.v1 import aiplatform as gcc_aip
 
 project_number = "first-project-413614"
 
@@ -237,6 +236,8 @@ def training_job(project: str, display_name: str, data_dir: str, num_hidden_laye
 def pipeline(
     project: str = project_number,
 ):
+    from google_cloud_pipeline_components.v1 import aiplatform as gcc_aip
+
     # Hyperparameter tuning job
     tuning_task = tuning_job(
         project=project,

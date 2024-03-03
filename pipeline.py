@@ -178,7 +178,8 @@
 
 # job.run()
 import kfp
-from kfp.v2 import compiler
+from kfp.v2 import compiler, dsl
+
 from google.cloud import aiplatform
 from google_cloud_pipeline_components.v1.custom_job import CustomTrainingJobOp
 from google_cloud_pipeline_components.v1 import hyperparameter_tuning_job
@@ -292,33 +293,62 @@ def training_job(project: str, display_name: str, data_dir: str, best_hyperparam
         ],
     )
 
-# Define the pipeline
-@kfp.dsl.pipeline(name="train-model")
-def pipeline(
-    project: str = project_number,
-):
+@dsl.pipeline(name="hyperparameter-tuning")
+def tuning_job(project: str = project_number,
+               display_name: str = "hyperparameter-tuning",
+               hp_dict: str = hp_dict,
+               data_dir: str = data_dir):
 
-    # Hyperparameter tuning job
-    tuning_task = tuning_job(
+    tuning_op = hyperparameter_tuning_job.HyperparameterTuningJobRunOp(
+        display_name=display_name,
+        base_output_directory=PIPELINE_ROOT,
+        worker_pool_specs=worker_pool_specs,
+        study_spec_metrics=["accuracy"],
+        study_spec_parameters=[hpt.DoubleParameterSpec(name="learning_rate", min=0.001, max=1, scale="log"),
+                               hpt.IntegerParameterSpec(name="epochs", min=1, max=3, scale="linear")],
+        max_trial_count=10,
+        parallel_trial_count=3,
+        project=project_number
+    )
+
+    return tuning_op
+
+# Define the training job with hyperparameters as arguments
+@dsl.pipeline(name="train-model")
+def training_job(project: str = project_number,
+                 display_name: str = "model-training",
+                 data_dir: str = data_dir,
+                 tuning_task: dsl.PipelineParam = tuning_job()):
+
+    best_hyperparameters = tuning_task.outputs["best_trial_parameters"]
+
+    training_op = CustomTrainingJobOp(
         project=project,
-        display_name="hyperparameter-tuning",
-        hp_dict=hp_dict,
-        data_dir=data_dir
+        display_name=display_name,
+        worker_pool_specs=[
+            {
+                "containerSpec": {
+                    "env": [
+                        {"name": "flower classification", "value": data_dir},
+                        {"name": "num_hidden_layers", "value": str(best_hyperparameters["num_hidden_layers"])},
+                        {"name": "hidden_size", "value": str(best_hyperparameters["hidden_size"])},
+                        {"name": "learning_rate", "value": str(best_hyperparameters["learning_rate"])},
+                        {"name": "epochs", "value": str(best_hyperparameters["epochs"])},
+                        {"name": "steps_per_epoch", "value": str(best_hyperparameters["steps_per_epoch"])}
+                    ],
+                    "imageUri": "us-central1-docker.pkg.dev/first-project-413614/flower-app/flower_image:latest",
+                },
+                "replicaCount": "1",
+                "machineSpec": {
+                    "machineType": "n1-standard-8",
+                },
+            }
+        ],
     )
-
-    # Training job
-    training_task = training_job(
-    project=project,
-    display_name="model-training",
-    data_dir=data_dir,
-    best_hyperparameters=tuning_task.outputs
-    )
-    # The training job should start only after the tuning job completes
-    training_task.after(tuning_task)
 
 # Compile the pipeline
 compiler.Compiler().compile(
-    pipeline_func=pipeline,
+    pipeline_func=training_job,
     package_path="train_model_pipeline.json",
 )
 

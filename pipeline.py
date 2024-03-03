@@ -189,12 +189,10 @@ TIMESTAMP = datetime.now().strftime("%Y%m%d%H%M%S")
 
 project_number = "first-project-413614"
 
-BUCKET_NAME="gs://" + project_number + "-bucket1"
+# Specify the staging bucket
+STAGING_BUCKET = "gs://your-staging-bucket"
 
-BUCKET_URI="gs://" + project_number + "-bucket"
-
-PIPELINE_ROOT = f"{BUCKET_URI}"
-
+PIPELINE_ROOT = f"gs://{project_number}-bucket"
 
 # Define hyperparameters and data directory
 hp_dict = '{"num_hidden_layers": 3, "hidden_size": 32, "learning_rate": 0.01, "epochs": 1, "steps_per_epoch": -1}'
@@ -203,7 +201,7 @@ container_spec = {
     "image_uri": "us-central1-docker.pkg.dev/first-project-413614/flower-app/flower_image:latest",
     "args": [
         f"--project_name={project_number}",
-        f"--bucket_name={BUCKET_NAME}",
+        f"--bucket_name={PIPELINE_ROOT}",
         f"--train_path=tweet_eval_emotions/data/train/train.csv",
         f"--test_path=tweet_eval_emotions/data/test/test.csv",
         f"--validation_path=tweet_eval_emotions/data/validation/validation.csv",
@@ -215,8 +213,6 @@ container_spec = {
 
 machine_spec = {
     "machine_type": "n1-standard-4",
-    # "accelerator_type": "NVIDIA_TESLA_T4",
-    # "accelerator_count": 2,
 }
 
 worker_pool_specs = [
@@ -234,6 +230,10 @@ worker_pool_specs = [
 
 JOB_NAME = "custom_nlp_training-hyperparameter-job " + TIMESTAMP
 
+# Initialize the aiplatform client with staging_bucket
+aiplatform.init(staging_bucket=STAGING_BUCKET)
+
+# Define the CustomJob
 custom_job = aiplatform.CustomJob(
     display_name=JOB_NAME, project=project_number, worker_pool_specs=worker_pool_specs
 )
@@ -249,14 +249,14 @@ parameter_spec = {
 def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str):
     
     return hyperparameter_tuning_job.HyperparameterTuningJobRunOp(
-    display_name=JOB_NAME,
-    custom_job=custom_job,
-    metric_spec=metric_spec,
-    parameter_spec=parameter_spec,
-    max_trial_count=2,
-    parallel_trial_count=2,
-    project=project_number,
-)
+        display_name=JOB_NAME,
+        custom_job=custom_job,
+        metric_spec=metric_spec,
+        parameter_spec=parameter_spec,
+        max_trial_count=2,
+        parallel_trial_count=2,
+        project=project_number,
+    )
 
 # Define the training job with hyperparameters as arguments
 def training_job(project: str, display_name: str, data_dir: str, num_hidden_layers: int, hidden_size: int, learning_rate: float, epochs: int, steps_per_epoch: int):

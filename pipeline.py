@@ -196,7 +196,7 @@ data_dir = f"gs://{project_number}-bucket/bikes_weather/flower_photos/"
 
 # Define the hyperparameter tuning job
 def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str):
-    return hyperparameter_tuning_job(
+    return hyperparameter_tuning_job.HyperparameterTuningJobRunOp(
         project=project,
         display_name=display_name,
         container_uri="us-central1-docker.pkg.dev/first-project-413614/flower-app/flower_image:latest",
@@ -241,13 +241,13 @@ def pipeline(
     project: str = project_number,
 ):
 
-    # # Hyperparameter tuning job
-    # tuning_task = tuning_job(
-    #     project=project,
-    #     display_name="hyperparameter-tuning",
-    #     hp_dict=hp_dict,
-    #     data_dir=data_dir
-    # )
+    # Hyperparameter tuning job
+    tuning_task = tuning_job(
+        project=project,
+        display_name="hyperparameter-tuning",
+        hp_dict=hp_dict,
+        data_dir=data_dir
+    )
 
     # Training job
     training_task = training_job(

@@ -241,13 +241,13 @@ def pipeline(
     project: str = project_number,
 ):
 
-    # Hyperparameter tuning job
-    tuning_task = tuning_job(
-        project=project,
-        display_name="hyperparameter-tuning",
-        hp_dict=hp_dict,
-        data_dir=data_dir
-    )
+    # # Hyperparameter tuning job
+    # tuning_task = tuning_job(
+    #     project=project,
+    #     display_name="hyperparameter-tuning",
+    #     hp_dict=hp_dict,
+    #     data_dir=data_dir
+    # )
 
     # Training job
     training_task = training_job(

@@ -108,51 +108,120 @@
 
 # job.run()
 
-import os
-from typing import Any, Dict, List
+# import os
+# from typing import Any, Dict, List
 
+# import kfp
+# import google.cloud.aiplatform as aip
+
+# from kfp.v2 import compiler  
+
+# project_number = "first-project-413614"
+
+# # Get your Google Cloud project ID from gcloud
+# BUCKET_NAME="gs://" + project_number + "-bucket1"
+
+# BUCKET_URI="gs://" + project_number + "-bucket"
+
+# PIPELINE_ROOT = f"{BUCKET_URI}"
+
+# hp_dict: str = '{"num_hidden_layers": 3, "hidden_size": 32, "learning_rate": 0.01, "epochs": 1, "steps_per_epoch": -1}'
+# data_dir: str = "gs://first-project-413614-bucket/bikes_weather/flower_photos/"
+# TRAINER_ARGS = ["--data-dir", data_dir, "--hptune-dict", hp_dict]
+
+# # create working dir to pass to job spec
+# WORKING_DIR = f"{PIPELINE_ROOT}"
+
+# MODEL_DISPLAY_NAME = f"train_deploy"
+# print(TRAINER_ARGS, WORKING_DIR, MODEL_DISPLAY_NAME)
+
+
+# @kfp.dsl.pipeline(name="train-model")
+# def pipeline(
+#     project: str = project_number,
+# ):
+#     from google_cloud_pipeline_components.types import artifact_types
+#     from google_cloud_pipeline_components.v1.custom_job import \
+#         CustomTrainingJobOp
+#     from kfp import dsl
+
+
+#     custom_job_task = CustomTrainingJobOp(
+#         project=project,
+#         display_name="model-training",
+#         worker_pool_specs=[
+#             {
+#                 "containerSpec": {
+#                     "env": [{"name": "flower classification", "value": WORKING_DIR}],
+#                     "imageUri": "us-central1-docker.pkg.dev/first-project-413614/flower-app/flower_image:latest",
+#                 },
+#                 "replicaCount": "1",
+#                 "machineSpec": {
+#                     "machineType": "n1-standard-8",
+#                 },
+#             }
+#         ],
+#     )
+    
+# compiler.Compiler().compile(
+#     pipeline_func=pipeline,
+#     package_path="train_model_pipeline.json",
+# )
+# DISPLAY_NAME = "bikes_weather_"
+
+# job = aip.PipelineJob(
+#     display_name=DISPLAY_NAME,
+#     template_path="train_model_pipeline.json",
+#     pipeline_root=PIPELINE_ROOT,
+#     enable_caching=False,
+# )
+
+# job.run()
 import kfp
-import google.cloud.aiplatform as aip
-
-from kfp.v2 import compiler  
+from kfp.v2 import compiler
+from google_cloud_pipeline_components.v1 import aiplatform as gcc_aip
 
 project_number = "first-project-413614"
 
-# Get your Google Cloud project ID from gcloud
-BUCKET_NAME="gs://" + project_number + "-bucket1"
+# Define your bucket and pipeline root paths
+BUCKET_URI = f"gs://{project_number}-bucket"
+PIPELINE_ROOT = f"{BUCKET_URI}/pipeline_root"
 
-BUCKET_URI="gs://" + project_number + "-bucket"
+# Define hyperparameters and data directory
+hp_dict = '{"num_hidden_layers": 3, "hidden_size": 32, "learning_rate": 0.01, "epochs": 1, "steps_per_epoch": -1}'
+data_dir = f"gs://{project_number}-bucket/bikes_weather/flower_photos/"
 
-PIPELINE_ROOT = f"{BUCKET_URI}"
-
-hp_dict: str = '{"num_hidden_layers": 3, "hidden_size": 32, "learning_rate": 0.01, "epochs": 1, "steps_per_epoch": -1}'
-data_dir: str = "gs://first-project-413614-bucket/bikes_weather/flower_photos/"
-TRAINER_ARGS = ["--data-dir", data_dir, "--hptune-dict", hp_dict]
-
-# create working dir to pass to job spec
-WORKING_DIR = f"{PIPELINE_ROOT}"
-
-MODEL_DISPLAY_NAME = f"train_deploy"
-print(TRAINER_ARGS, WORKING_DIR, MODEL_DISPLAY_NAME)
-
-
-@kfp.dsl.pipeline(name="train-model")
-def pipeline(
-    project: str = project_number,
-):
-    from google_cloud_pipeline_components.types import artifact_types
-    from google_cloud_pipeline_components.v1.custom_job import \
-        CustomTrainingJobOp
-    from kfp import dsl
-
-
-    custom_job_task = CustomTrainingJobOp(
+# Define the hyperparameter tuning job
+def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str) -> gcc_aip.HyperparameterTuningJobOp:
+    return gcc_aip.HyperparameterTuningJobOp(
         project=project,
-        display_name="model-training",
+        display_name=display_name,
+        container_uri="us-central1-docker.pkg.dev/first-project-413614/flower-app/flower_image:latest",
+        args=["--data-dir", data_dir, "--hptune-dict", hp_dict],
+        metric="accuracy",
+        max_trial_count=10,
+        parallel_trial_count=3,
+        machine_spec={"machine_type": "n1-standard-8"},
+        objective="maximize",
+        network={"use_current_subnet": True},
+    )
+
+# Define the training job with hyperparameters as arguments
+def training_job(project: str, display_name: str, data_dir: str, num_hidden_layers: int, hidden_size: int, learning_rate: float, epochs: int, steps_per_epoch: int) -> gcc_aip.CustomTrainingJobOp:
+    return gcc_aip.CustomTrainingJobOp(
+        project=project,
+        display_name=display_name,
         worker_pool_specs=[
             {
                 "containerSpec": {
-                    "env": [{"name": "flower classification", "value": WORKING_DIR}],
+                    "env": [
+                        {"name": "flower classification", "value": data_dir},
+                        {"name": "num_hidden_layers", "value": str(num_hidden_layers)},
+                        {"name": "hidden_size", "value": str(hidden_size)},
+                        {"name": "learning_rate", "value": str(learning_rate)},
+                        {"name": "epochs", "value": str(epochs)},
+                        {"name": "steps_per_epoch", "value": str(steps_per_epoch)}
+                    ],
                     "imageUri": "us-central1-docker.pkg.dev/first-project-413614/flower-app/flower_image:latest",
                 },
                 "replicaCount": "1",
@@ -162,18 +231,43 @@ def pipeline(
             }
         ],
     )
-    
+
+# Define the pipeline
+@kfp.dsl.pipeline(name="train-model")
+def pipeline(
+    project: str = project_number,
+):
+    # Hyperparameter tuning job
+    tuning_task = tuning_job(
+        project=project,
+        display_name="hyperparameter-tuning",
+        hp_dict=hp_dict,
+        data_dir=data_dir
+    )
+
+    # Training job
+    training_task = training_job(
+        project=project,
+        display_name="model-training",
+        data_dir=data_dir,
+        num_hidden_layers=tuning_task.outputs["best_hyperparameters"]["num_hidden_layers"],
+        hidden_size=tuning_task.outputs["best_hyperparameters"]["hidden_size"],
+        learning_rate=tuning_task.outputs["best_hyperparameters"]["learning_rate"],
+        epochs=tuning_task.outputs["best_hyperparameters"]["epochs"],
+        steps_per_epoch=tuning_task.outputs["best_hyperparameters"]["steps_per_epoch"]
+    )
+
+    # The training job should start only after the tuning job completes
+    training_task.after(tuning_task)
+
+# Compile the pipeline
 compiler.Compiler().compile(
     pipeline_func=pipeline,
     package_path="train_model_pipeline.json",
 )
-DISPLAY_NAME = "bikes_weather_"
 
-job = aip.PipelineJob(
-    display_name=DISPLAY_NAME,
-    template_path="train_model_pipeline.json",
+# Run the pipeline
+job = kfp.v2.client.Client().create_run_from_job_spec(
+    job_spec_path="train_model_pipeline.json",
     pipeline_root=PIPELINE_ROOT,
-    enable_caching=False,
 )
-
-job.run()

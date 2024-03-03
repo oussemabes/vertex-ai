@@ -10,55 +10,55 @@ steps:
   # # Step 2: Push the container image to Artifact Registry
   # - name: 'gcr.io/cloud-builders/docker'
   #   args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/flower-app/flower_image']
-  # #Step 3: Create and start the pipeline
-  # - name: python
-  #   entrypoint: pip
-  #   args: ["install", "-r", "requirements.txt", "--user"]
+  #Step 3: Create and start the pipeline
+  - name: python
+    entrypoint: pip
+    args: ["install", "-r", "requirements.txt", "--user"]
 
-  # # Compile pipeline
-  # - name: 'python'
-  #   entrypoint: 'python'
-  #   args: ['pipeline.py']
-  #   id: 'compile'
+  # Compile pipeline
+  - name: 'python'
+    entrypoint: 'python'
+    args: ['pipeline.py']
+    id: 'compile'
   # Copy Trained model
-  - name: 'gcr.io/cloud-builders/gsutil'
-    args: ['cp', '-r', 'gs://first-project-413614-bucket/model/*', './trainedModel']
-  # Step 6: Build the serving container image
-  - name: 'gcr.io/cloud-builders/docker'
-    args:
-      - 'build'
-      - '-t'
-      - 'europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform'
-      - '-f'
-      - 'DockerfileForDepGKE'
-      - '.'
-  # Step 7: Push the serving container image to Artifact Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform']
-  - name: "gcr.io/cloud-builders/gcloud"
-    entrypoint: "bash"
-    args:
-      - "-c"
-      - |
-        export CLOUDSDK_COMPUTE_REGION=us-central1
-        export CLOUDSDK_COMPUTE_ZONE=us-central1-c
-        export CLOUDSDK_CONTAINER_CLUSTER=cluster-1
-        gcloud container clusters get-credentials cluster-1 --zone us-central1-c --project first-project-413614
+  # - name: 'gcr.io/cloud-builders/gsutil'
+  #   args: ['cp', '-r', 'gs://first-project-413614-bucket/model/*', './trainedModel']
+  # # Step 6: Build the serving container image
+  # - name: 'gcr.io/cloud-builders/docker'
+  #   args:
+  #     - 'build'
+  #     - '-t'
+  #     - 'europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform'
+  #     - '-f'
+  #     - 'DockerfileForDepGKE'
+  #     - '.'
+  # # Step 7: Push the serving container image to Artifact Registry
+  # - name: 'gcr.io/cloud-builders/docker'
+  #   args: ['push', 'europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform']
+  # - name: "gcr.io/cloud-builders/gcloud"
+  #   entrypoint: "bash"
+  #   args:
+  #     - "-c"
+  #     - |
+  #       export CLOUDSDK_COMPUTE_REGION=us-central1
+  #       export CLOUDSDK_COMPUTE_ZONE=us-central1-c
+  #       export CLOUDSDK_CONTAINER_CLUSTER=cluster-1
+  #       gcloud container clusters get-credentials cluster-1 --zone us-central1-c --project first-project-413614
 
-        # Check if deployment exists
-        if kubectl get deployment ml-model &> /dev/null; then
-          # Deployment exists, update image
-          kubectl set image deployment/ml-model terrafrom=europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform:latest
-        else
-          # Deployment does not exist, create it
-          kubectl create deployment ml-model --image=europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform:latest
-        fi
+  #       # Check if deployment exists
+  #       if kubectl get deployment ml-model &> /dev/null; then
+  #         # Deployment exists, update image
+  #         kubectl set image deployment/ml-model terrafrom=europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform:latest
+  #       else
+  #         # Deployment does not exist, create it
+  #         kubectl create deployment ml-model --image=europe-west3-docker.pkg.dev/first-project-413614/terraform/terraform:latest
+  #       fi
 
-        # Delete existing service if it exists
-        kubectl delete service ml-model --ignore-not-found
+  #       # Delete existing service if it exists
+  #       kubectl delete service ml-model --ignore-not-found
 
-        # Expose deployment
-        kubectl expose deployment ml-model --type=LoadBalancer --port=80 --port=8501 --target-port=8501
+  #       # Expose deployment
+  #       kubectl expose deployment ml-model --type=LoadBalancer --port=80 --port=8501 --target-port=8501
 
   # - name: 'gcr.io/cloud-builders/kubectl'
   #   args:

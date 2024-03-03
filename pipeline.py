@@ -264,7 +264,7 @@ def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str):
     parallel_trial_count=3,  # Example value, adjust as needed
     project=project_number
 )
-    return tuning_op.outputs["best_trial_parameters"]
+    return tuning_op.outputs
 
 # Define the training job with hyperparameters as arguments
 def training_job(project: str, display_name: str, data_dir: str, best_hyperparameters: dict):
@@ -311,7 +311,7 @@ def pipeline(
     project=project,
     display_name="model-training",
     data_dir=data_dir,
-    best_hyperparameters=tuning_task.outputs["best_trial_parameters"]
+    best_hyperparameters=tuning_task.outputs
     )
     # The training job should start only after the tuning job completes
     training_task.after(tuning_task)

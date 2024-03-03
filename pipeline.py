@@ -185,14 +185,17 @@ project_number = "first-project-413614"
 # Define your bucket and pipeline root paths
 BUCKET_URI = f"gs://{project_number}-bucket"
 PIPELINE_ROOT = f"{BUCKET_URI}/pipeline_root"
+from google_cloud_pipeline_components.v1.custom_job import \
+        CustomTrainingJobOp
+from google_cloud_pipeline_components.v1 import hyperparameter_tuning_job
 
 # Define hyperparameters and data directory
 hp_dict = '{"num_hidden_layers": 3, "hidden_size": 32, "learning_rate": 0.01, "epochs": 1, "steps_per_epoch": -1}'
 data_dir = f"gs://{project_number}-bucket/bikes_weather/flower_photos/"
 
 # Define the hyperparameter tuning job
-def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str) -> gcc_aip.HyperparameterTuningJobOp:
-    return gcc_aip.HyperparameterTuningJobOp(
+def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str) -> hyperparameter_tuning_job:
+    return hyperparameter_tuning_job(
         project=project,
         display_name=display_name,
         container_uri="us-central1-docker.pkg.dev/first-project-413614/flower-app/flower_image:latest",
@@ -206,8 +209,8 @@ def tuning_job(project: str, display_name: str, hp_dict: str, data_dir: str) -> 
     )
 
 # Define the training job with hyperparameters as arguments
-def training_job(project: str, display_name: str, data_dir: str, num_hidden_layers: int, hidden_size: int, learning_rate: float, epochs: int, steps_per_epoch: int) -> gcc_aip.CustomTrainingJobOp:
-    return gcc_aip.CustomTrainingJobOp(
+def training_job(project: str, display_name: str, data_dir: str, num_hidden_layers: int, hidden_size: int, learning_rate: float, epochs: int, steps_per_epoch: int) -> CustomTrainingJobOp:
+    return CustomTrainingJobOp(
         project=project,
         display_name=display_name,
         worker_pool_specs=[
@@ -236,7 +239,6 @@ def training_job(project: str, display_name: str, data_dir: str, num_hidden_laye
 def pipeline(
     project: str = project_number,
 ):
-    from google_cloud_pipeline_components.v1 import aiplatform as gcc_aip
 
     # Hyperparameter tuning job
     tuning_task = tuning_job(

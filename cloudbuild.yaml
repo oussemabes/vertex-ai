@@ -65,8 +65,7 @@ steps:
     id: RunCommands
     env:
     - PROJECT_ID=$(gcloud info --format='value(config.project)')
-    - ZONE=us-west4 # Replace with the zone where your VM resides
-    - VM_NAME=instance-20240326-105857  # Replace with the actual VM name
+    - ZONE="us-west4b"
+    - VM_NAME="instance-20240326-105857"
     script: |
-      gcloud auth login --update-activation-token  # Authenticate with default service account
-      gcloud compute ssh $ZONE $VM_NAME --command "cd replicate-deploy; git pull; python3 -m venv my_env ; source myenv/bin/activate; python3 download-model.py; deactivate;  echo "db386a14-c896-42cf-9d0d-71f4b89b1cd9" | cog login --token-stdin;cog push r8.im/kworeai/image-test-878"
+      gcloud compute ssh $ZONE $VM_NAME --project "first-project-413614" --command "cd replicate-deploy; git pull; python3 -m venv my_env ; source myenv/bin/activate; python3 download-model.py; deactivate;  echo "db386a14-c896-42cf-9d0d-71f4b89b1cd9" | cog login --token-stdin;cog push r8.im/kworeai/image-test-878"

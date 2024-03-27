@@ -58,18 +58,17 @@
 #         # Expose deployment
 #         kubectl expose deployment ml-model --type=LoadBalancer --port=80 --port=8501 --target-port=8501
 
-
 steps:
-  - name: 'gcr.io/cloud-builders/gcloud'
-    id: Connect to instance
-    entrypoint: /bin/sh
-    args:
-      - '-c'
-      - |
-        mkdir -p ~/root/.ssh &&
-        gcloud secrets versions access latest --secret=cloud-build-ssh-key > ~/root/.ssh/id_rsa &&
-        chmod 600 ~/root/.ssh/id_rsa &&
-        gcloud secrets versions access latest --secret=cloud-build-ssh-key-pub > ~/root/.ssh/id_rsa.pub &&
-        chmod 600 ~/root/.ssh/id_rsa.pub &&
-        set -x &&
-        gcloud compute ssh "instance-20240326-105857" --ssh-key-file=~/root/.ssh/id_rsa --zone=us-west4-b
+- name: 'gcr.io/cloud-builders/gcloud'
+  id: ConnectToInstance
+  entrypoint: /bin/bash  # Use bash for better compatibility
+  # Directly include the commands in the script argument
+  args:
+  - | # Execute the following command
+   
+    mkdir -p /root/.ssh &&
+    gcloud secrets versions access latest --secret=cloud-build-ssh-key > /root/.ssh/id_rsa &&
+    chmod 600 /root/.ssh/id_rsa &&
+    # Add the VM's fingerprint to known_hosts (optional)
+    # ssh-keyscan -H 34.125.123.245 >> /root/.ssh/known_hosts &&
+    gcloud compute ssh instance-20240326-105857 --ssh-key-file=/root/.ssh/id_rsa --zone=us-west4-b || true

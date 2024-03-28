@@ -72,4 +72,4 @@ steps:
       chmod 600 /root/.ssh/id_rsa &&
       chmod 600 /root/.ssh/id_rsa.pub &&
       set -x &&
-      gcloud compute ssh instance-20240326-105857 --ssh-key-file=/root/.ssh/id_rsa --zone=us-west4-b --troubleshoot
+      gcloud compute ssh "instance-20240326-105857" --ssh-key-file=/root/.ssh/id_rsa --zone="us-west4-b"
